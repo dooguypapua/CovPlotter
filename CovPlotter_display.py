@@ -15,7 +15,7 @@ def printtitle(dicoInit):
 
 #***** Print usage *****#
 def printusage(dicoInit):
-    printcolor("\n  USAGE: CovPlotter.py [OPTIONS] -g genes.txt -r hg19 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
+    printcolor("  USAGE: CovPlotter.py [OPTIONS] -g genes.txt -r hg19 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
     printcolor("\n         CovPlotter.py [OPTIONS] -n ACAD,OPA1 -r hg20 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
     printcolor("\n         CovPlotter.py [OPTIONS] -l genes.bed -r hg19 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
     printcolor("\n\n  [OPTIONS]","0","222;220;184",dicoInit['color'])
