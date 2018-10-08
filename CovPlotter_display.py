@@ -19,14 +19,14 @@ def printusage(dicoInit):
     printcolor("\n         CovPlotter.py [OPTIONS] -n ACAD,OPA1 -r hg20 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
     printcolor("\n         CovPlotter.py [OPTIONS] -l genes.bed -r hg19 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
     printcolor("\n\n  [OPTIONS]","0","222;220;184",dicoInit['color'])
-    printcolor("\n      -gff       FILE     Annotation file  (gff format)","0","222;220;184",dicoInit['color'])
-    printcolor("\n                          (else download and save in CovPlotter folder)","0","117;116;97",dicoInit['color'])
-    printcolor("\n      -tmp       DIR      Temporary folder (default: /tmp)","0","222;220;184",dicoInit['color'])
-    printcolor("\n      -nt        INT      Threads number   (default: 1)","0","222;220;184",dicoInit['color'])    
-    printcolor("\n      -color     BOOL     Terminal color   (true or false)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -gff       FILE     Annotation GFF file  (default: download)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -tmp       DIR      Temporary folder     (default: /tmp)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -nt        INT      Threads number       (default: 1)","0","222;220;184",dicoInit['color'])    
+    printcolor("\n      -color     BOOL     Terminal color       (true or false)","0","222;220;184",dicoInit['color'])
     printcolor("\n      -h,--help","0","222;220;184",dicoInit['color'])
     printcolor("\n      -v,--version","0","222;220;184",dicoInit['color'])
     exit("\n\n")
+
 
 #***** Download progression *****#
 def reporthook(count, block_size, total_size):

@@ -29,11 +29,10 @@
          CovPlotter.py [OPTIONS] -l genes.bed -r hg19 -i listBam.txt -o output
 
   [OPTIONS]
-      -gff       FILE     Annotation file  (gff format)
-                          (else download and save in CovPlotter folder)
-      -tmp       DIR      Temporary folder (default: /tmp)
-      -nt        INT      Threads number   (default: 1)
-      -color     BOOL     Terminal color   (true or false)
+      -gff       FILE     Annotation GFF file  (default: download)
+      -tmp       DIR      Temporary folder     (default: /tmp)
+      -nt        INT      Threads number       (default: 1)
+      -color     BOOL     Terminal color       (true or false)
       -h,--help
       -v,--version
 ```
