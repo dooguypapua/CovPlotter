@@ -11,7 +11,7 @@ def printcolor(text,style,fg_rgb,colorBool):
 
 #***** Print title *****#
 def printtitle(dicoInit):
-    printcolor("\n   __      __              \n  /   _   |__)| _ |_|_ _ _ \n  \__(_)\/|   |(_)|_|_(-|  \n  ____________________________________________________________________\n","0","255;187;108",dicoInit['color'])
+    printcolor("\n   __      __              \n  /   _   |__)| _ |_|_ _ _ \n  \__(_)\/|   |(_)|_|_(-|  \n  ____________________________________________________________________\n\n","0","255;187;108",dicoInit['color'])
 
 #***** Print usage *****#
 def printusage(dicoInit):

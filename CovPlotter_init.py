@@ -13,7 +13,7 @@ from CovPlotter_display import *
 
 #***** Arg manager *****#
 def arg_manager(lst_arg):
-    dicoInit = { 'lst_bam':[], 'genes':"", 'lst_genes':[], 'bed':"", 'gff':"", 'out':"", 'ref':"", 'spinner':yaspin(), 'tmp':"/tmp/"+str(uuid.uuid4())[:8], 'nt':1, 'color':True }
+    dicoInit = { 'inputType':"", 'lst_bam':[], 'genes':"", 'lst_genes':[], 'bed':"", 'gff':"", "db_gff":None, 'out':"", 'ref':"", 'spinner':yaspin(), 'tmp':"/tmp/"+str(uuid.uuid4())[:8], 'nt':1, 'color':True }
     lstError = []
     bool_i = False ; bool_o = False ; bool_g = False ; bool_n = False ; bool_l = False ; bool_r = False
     if len(lst_arg)==1 or lst_arg[1] in ["-h","--help"]: printtitle(dicoInit) ; printusage(dicoInit)
@@ -55,11 +55,13 @@ def arg_manager(lst_arg):
                 else: 
                     try: I = open(dicoInit['genes'],'r') ; dicoInit['lst_genes'] = I.read().split("\n") ; I.close()
                     except: lstError.append("(-g) Unable to read file \""+lst_arg[i+1]+"\"")
+            dicoInit['inputType'] = "g"
             next(iterarg)
         elif lst_arg[i]=="-n":
             bool_n = True
             if len(lst_arg)<=i+1: lstError.append("(-n) Any value specified")
             else: dicoInit['lst_genes'] = lst_arg[i+1].split(",")
+            dicoInit['inputType'] = "n"
             next(iterarg)
         elif lst_arg[i]=="-l":
             bool_l = True
@@ -68,6 +70,7 @@ def arg_manager(lst_arg):
             else:
                 dicoInit['bed'] = lst_arg[i+1]
                 if is_binary(dicoInit['bed']): lstError.append("(-l) Invalid file \""+lst_arg[i+1]+"\" (binary found)")
+            dicoInit['inputType'] = "l"
             next(iterarg)
         elif lst_arg[i]=="-r": 
             bool_r = True
@@ -119,23 +122,6 @@ def arg_manager(lst_arg):
         printcolor(" "+lstError[0]+"\n","0","212;0;0",dicoInit['color'])
         for error in lstError[1:]: printcolor("         "+error+"\n","0","212;0;0",dicoInit['color'])
         printusage(dicoInit)
+    # Create tmp folder
+    os.makedirs(dicoInit['tmp'], exist_ok=True)
     return dicoInit
-
-
-#***** Download GFF *****#
-def get_refseq_gff(dicoInit):
-    printcolor("\n    • Download refseq gff file","0","255;187;108",dicoInit['color']) ; sys.stdout.write('\x1b7')
-    print("\x1b[0;38;2;159;108;102m\n") ; sys.stdout.write("\033[F")
-    if dicoInit['ref']=="hg19": url = "ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh37_latest/refseq_identifiers/GRCh37_latest_genomic.gff.gz"
-    elif dicoInit['ref']=="hg20": url = "ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.gff.gz"
-    path_tmp_download = dicoInit['tmp']+"/"+os.path.basename(url)
-    urllib.request.urlretrieve(url,path_tmp_download,reporthook)
-    # Extract gzip and change chromosomes name
-    GZ = gzip.open(path_tmp_download, 'rb')
-    GFF = open(os.getcwd()+"/db/"+os.path.basename(url).replace(".gz",""), 'wb')
-    GFF.write(GZ.read())
-    GZ.close()
-    GFF.close()
-    sys.stdout.write('\x1b[1K')
-    sys.stdout.write('\x1b8')
-    printcolor(" [OK]\n","0","222;220;184",dicoInit['color'])

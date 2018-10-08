@@ -1,5 +1,8 @@
-# CovPlotter
+![CovPlotter logo](http://163.172.45.124/uploads/logo.png)
+
+
 Plot transcripts reads depth
+
 
 ##
 
@@ -12,3 +15,7 @@ samtools
 yaspin
 
 gzip
+
+gffutils
+
+pybedtools
