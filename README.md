@@ -25,15 +25,16 @@
   \__(_)\/|   |(_)|_|_(-|  
   ____________________________________________________________________
 
-  USAGE: CovPlotter.py [OPTIONS] -g genes.txt -r hg19 -i listBam.txt -o output
-         CovPlotter.py [OPTIONS] -n ACAD,OPA1 -r hg20 -i listBam.txt -o output
-         CovPlotter.py [OPTIONS] -l genes.bed -r hg19 -i listBam.txt -o output
+  USAGE: CovPlotter.py [OPTIONS] -g genes.txt -i listBam.txt -o output
+         CovPlotter.py [OPTIONS] -n ACAD,OPA1 -i listBam.txt -o output
+         CovPlotter.py [OPTIONS] -l genes.bed -i listBam.txt -o output
 
   [OPTIONS]
-      -gff       FILE     Annotation GFF file  (default: download)
-      -tmp       DIR      Temporary folder     (default: /tmp)
-      -nt        INT      Threads number       (default: 1)
-      -color     BOOL     Terminal color       (true or false)
+      -ref       STR      Reference hg19/hg20      (default: hg19)
+      -db        STR      Database refseq/ensembl  (default: refseq)
+      -tmp       DIR      Temporary folder         (default: /tmp)
+      -nt        INT      Threads number           (default: 1)
+      -color     BOOL     Terminal color           (true or false)
       -h,--help
       -v,--version
 ```
