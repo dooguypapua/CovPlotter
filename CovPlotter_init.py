@@ -13,7 +13,7 @@ from CovPlotter_display import *
 
 #***** Arg manager *****#
 def arg_manager(lst_arg):
-    dicoInit = { 'inputType':"", 'lst_bam':[], 'genes':"", 'lst_genes':[], 'bed':"", 'gff':"", "db_gff":None, 'out':"", 'ref':"", 'spinner':yaspin(), 'tmp':"/tmp/"+str(uuid.uuid4())[:8], 'nt':1, 'color':True }
+    dicoInit = { 'inputType':"", 'dicoBam':{}, 'genes':"", 'lst_genes':[], 'bed':"", 'gff':"", 'gff_db':"", "db":"refseq", 'out':"", 'ref':"", 'spinner':yaspin(), 'tmp':"/tmp/coverplot_"+str(uuid.uuid4())[:8], 'nt':1, 'color':True }
     lstError = []
     bool_i = False ; bool_o = False ; bool_g = False ; bool_n = False ; bool_l = False ; bool_r = False
     if len(lst_arg)==1 or lst_arg[1] in ["-h","--help"]: printtitle(dicoInit) ; printusage(dicoInit)
@@ -35,7 +35,7 @@ def arg_manager(lst_arg):
                         if os.path.isfile(bam):
                             pipe = subprocess.Popen("samtools quickcheck "+bam, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) ; pipe.communicate()
                             if pipe.returncode!=0: lstError.append("(-i) Invalid file format \""+bam+"\"")
-                            else: dicoInit['lst_bam'].append(bam)
+                            else: dicoInit['dicoBam'][len(dicoInit['dicoBam'])] = bam
                         elif bam!="": lstError.append("(-i) File \""+bam+"\" was not found")
             next(iterarg)
         elif lst_arg[i]=="-o":
@@ -72,20 +72,18 @@ def arg_manager(lst_arg):
                 if is_binary(dicoInit['bed']): lstError.append("(-l) Invalid file \""+lst_arg[i+1]+"\" (binary found)")
             dicoInit['inputType'] = "l"
             next(iterarg)
-        elif lst_arg[i]=="-r": 
+        # OPTIONS PARAMETERS
+        elif lst_arg[i]=="-ref": 
             bool_r = True
-            if len(lst_arg)<=i+1: lstError.append("(-r) Any value specified")
-            elif not lst_arg[i+1].lower() in ["hg19","hg20"]: lstError.append("(-r) Invalid value \""+lst_arg[i+1]+"\"")
+            if len(lst_arg)<=i+1: lstError.append("(-ref) Any value specified")
+            elif not lst_arg[i+1].lower() in ["hg19","hg20"]: lstError.append("(-ref) Invalid value \""+lst_arg[i+1]+"\"")
             else: dicoInit['ref'] = lst_arg[i+1].lower()
             next(iterarg)
-        # OPTIONS PARAMETERS
-        elif lst_arg[i]=="-gff":
-            if len(lst_arg)<=i+1: lstError.append("(-gff) Any value specified")
-            elif not os.path.isfile(lst_arg[i+1]): lstError.append("(-gff) File \""+lst_arg[i+1]+"\" was not found")
-            else:
-                dicoInit['gff'] = lst_arg[i+1]
-                if dicoInit['gff'][-3:]!="gff": lstError.append("(-l) Invalid file format \""+lst_arg[i+1]+"\" ("+dicoInit['gff'][-3:]+" found)")
-                elif is_binary(dicoInit['gff']): lstError.append("(-l) Invalid file format \""+lst_arg[i+1]+"\" (binary found)")
+        elif lst_arg[i]=="-db": 
+            bool_r = True
+            if len(lst_arg)<=i+1: lstError.append("(-db) Any value specified")
+            elif not lst_arg[i+1].lower() in ["refseq","ensembl"]: lstError.append("(-db) Invalid value \""+lst_arg[i+1]+"\"")
+            else: dicoInit['db'] = lst_arg[i+1].lower()
             next(iterarg)
         elif lst_arg[i]=="-tmp":
             if len(lst_arg)<=i+1: lstError.append("(-tmp) Any value specified")
@@ -109,7 +107,6 @@ def arg_manager(lst_arg):
     missing = ""
     if not bool_i: missing+="\"-i\" "
     if not bool_o: missing+="\"-o\" "
-    if not bool_r: missing+="\"-r\" "
     if not bool_g and not bool_n and not bool_l: missing+="\"-g|-n|-l\" "
     if len(missing)>0: lstError.insert(0,"Missing required parameters "+missing)
     if sum([bool_g, bool_n, bool_l])>1: lstError.insert(0,"Multiple genes input parameters found, select \"-g\" or \"-n\" or \"-l\"")

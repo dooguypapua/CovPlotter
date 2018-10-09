@@ -12,15 +12,19 @@ from CovPlotter_bedgff import *
 # Arguments
 dicoInit = arg_manager(sys.argv)
 # Check GFF
-if dicoInit["gff"]=="": get_gff(dicoInit)
-
+check_gff(dicoInit)
 
 #***** CREATE & LOAD GFF DB *****#
-create_gff_db(dicoInit)
 load_gff_db(dicoInit)
 
 #***** GENES to TRANSCRIPTS *****#
 retrieve_transcripts(dicoInit)
+create_detailed_bed(dicoInit)
+
+#***** COVERAGE *****#
+#launch_coverage(dicoInit)
+parse_coverage(dicoInit)
+
 
 # print(dicoInit)
 # shutil.rmtree(dicoInit['tmp'])

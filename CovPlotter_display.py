@@ -15,18 +15,18 @@ def printtitle(dicoInit):
 
 #***** Print usage *****#
 def printusage(dicoInit):
-    printcolor("  USAGE: CovPlotter.py [OPTIONS] -g genes.txt -r hg19 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
-    printcolor("\n         CovPlotter.py [OPTIONS] -n ACAD,OPA1 -r hg20 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
-    printcolor("\n         CovPlotter.py [OPTIONS] -l genes.bed -r hg19 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
+    printcolor("\n  USAGE: CovPlotter.py [OPTIONS] -g genes.txt -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
+    printcolor("\n         CovPlotter.py [OPTIONS] -n ACAD,OPA1 -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
+    printcolor("\n         CovPlotter.py [OPTIONS] -l genes.bed -i listBam.txt -o output","0","255;187;108",dicoInit['color'])
     printcolor("\n\n  [OPTIONS]","0","222;220;184",dicoInit['color'])
-    printcolor("\n      -gff       FILE     Annotation GFF file  (default: download)","0","222;220;184",dicoInit['color'])
-    printcolor("\n      -tmp       DIR      Temporary folder     (default: /tmp)","0","222;220;184",dicoInit['color'])
-    printcolor("\n      -nt        INT      Threads number       (default: 1)","0","222;220;184",dicoInit['color'])    
-    printcolor("\n      -color     BOOL     Terminal color       (true or false)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -ref       STR      Reference hg19/hg20      (default: hg19)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -db        STR      Database refseq/ensembl  (default: refseq)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -tmp       DIR      Temporary folder         (default: /tmp)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -nt        INT      Threads number           (default: 1)","0","222;220;184",dicoInit['color'])    
+    printcolor("\n      -color     BOOL     Terminal color           (true or false)","0","222;220;184",dicoInit['color'])
     printcolor("\n      -h,--help","0","222;220;184",dicoInit['color'])
     printcolor("\n      -v,--version","0","222;220;184",dicoInit['color'])
     exit("\n\n")
-
 
 #***** Download progression *****#
 def reporthook(count, block_size, total_size):

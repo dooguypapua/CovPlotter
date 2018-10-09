@@ -16,6 +16,7 @@
 - [gffutils](https://github.com/daler/gffutils)<br/>
 - [pybedtools](https://github.com/daler/pybedtools)<br/>
 - [samtools](https://github.com/samtools/samtools)<br/>
+- tqdm
 
 ### Running
 ```markdown

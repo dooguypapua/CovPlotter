@@ -1,87 +1,203 @@
 # -*- coding: utf-8 -*-
 # dooguypapua
-import sys,os,shutil
+import sys,os,shutil,re,glob
 import subprocess
 import gffutils
+import urllib.request
 from pybedtools import BedTool,cleanup
 from CovPlotter_init import *
 from CovPlotter_display import *
+from CovPlotter_process import *
 
 
 #**************************************#
 #            DOWNLOAD GFF              #
 #**************************************#
-def get_gff(dicoInit):
-    printcolor("    • Download GFF file\n","0","222;220;184",dicoInit["color"])    
-    print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
-    if dicoInit['ref']=="hg19": url = "ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh37_latest/refseq_identifiers/GRCh37_latest_genomic.gff.gz"
-    elif dicoInit['ref']=="hg20": url = "ftp://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/annotation/GRCh38_latest/refseq_identifiers/GRCh38_latest_genomic.gff.gz"
-    path_tmp_download = dicoInit['tmp']+"/"+os.path.basename(url)
-    urllib.request.urlretrieve(url,path_tmp_download,reporthook)
-    # Extract gzip and change chromosomes name
-    os.makedirs(os.getcwd()+"/db", exist_ok=True) # Create db folder
-    dicoInit["gff"] = os.getcwd()+"/db/"+os.path.basename(url).replace(".gz","")
-    GZ = gzip.open(path_tmp_download, 'rb')
-    GFF = open(dicoInit["gff"], 'wb')
-    GFF.write(GZ.read())
-    GZ.close()
-    GFF.close()
-    sys.stdout.write("\033[F")
-    printcolor("    • GFF downloaded","0","222;220;184",dicoInit["color"])
-    printcolor(" <> "+dicoInit["gff"]+"\n","0","117;116;97",dicoInit["color"])
-
-
-#**************************************#
-#       CREATE gffutils Database       #
-#**************************************#
-def create_gff_db(dicoInit):
-    if not os.path.isfile(dicoInit["gff"].replace(".gff",".db")):
+def check_gff(dicoInit):
+    server = "http://163.172.45.124/share/db/"
+    # Create db folder
+    os.makedirs(os.getcwd()+"/db", exist_ok=True)
+    # Check online files
+    listfile = urllib.request.urlopen(server)
+    for line in listfile.readlines():
+        search_file = re.search(">("+dicoInit["db"]+"_"+dicoInit["ref"]+"_.+\.gff.gz)</a></td>",str(line))
+        if search_file:
+            urlpath = search_file.group(1)
+            urlversion = urlpath.split("_")[2].replace(".gff.gz","")
+    # Check local files
+    dl = False
+    glob_gff = glob.glob(os.getcwd()+"/db/"+dicoInit["db"]+"_"+dicoInit["ref"]+"*.gff")
+    glob_gff_db = glob.glob(os.getcwd()+"/db/"+dicoInit["db"]+"_"+dicoInit["ref"]+"*.db")
+    # Missing one file
+    if len(glob_gff)!=len(glob_gff_db):
+        try: os.remove(glob_gff[0])
+        except: pass
+        try: os.remove(glob_gff_db[0])
+        except: pass
+        dl = True
+    # Missing two files
+    elif len(glob_gff)==len(glob_gff_db)==1:
+        dicoInit["gff"] = glob_gff[0]
+        dicoInit["gff_db"] = glob_gff_db[0]
+        version = os.path.basename(dicoInit["gff"]).split("_")[2].replace(".gff","")
+        # Update version is available
+        if int(urlversion.replace("v",""))>int(version.replace("v","")):
+            printcolor("    Found "+dicoInit["db"]+" "+dicoInit["ref"]+" "+version+" but "+urlversion+" is available.\n    Do you want to upgrade (y/n)? ","0","222;220;184",dicoInit["color"])
+            choice = input().lower()
+            while choice!="y" and choice!="n":
+                printcolor("    Do you want to upgrade (y/n)? ","0","222;220;184",dicoInit["color"])
+                choice = input().lower()
+            # Delete older version
+            if choice=="y":
+                dl = True
+                os.remove(dicoInit["gff"]) ; os.remove(dicoInit["gff_db"])
+                sys.stdout.write("\033[F") ; sys.stdout.write("\x1b[2K") ; sys.stdout.write("\033[F") ; sys.stdout.write("\x1b[2K")
+    else: dl = True
+    # Download files
+    if dl==True:
+        printcolor("    • Download GFF/DB files\n","0","222;220;184",dicoInit["color"])
         print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
-        dicoInit["spinner"].text = "    • Create GFF DB"
-        dicoInit["spinner"].start()
-        fn = gffutils.example_filename(dicoInit["gff"])
-        gffutils.create_db(fn, dbfn=dicoInit["gff"].replace(".gff",".db"), force=True, keep_order=True, merge_strategy='merge', sort_attribute_values=True, disable_infer_genes=True, disable_infer_transcripts=True)
-        dicoInit["spinner"].stop()
-        printcolor("    • GFF DB created","0","222;220;184",dicoInit["color"])
-    else: printcolor("    • GFF DB found","0","222;220;184",dicoInit["color"])
-    printcolor(" <> "+dicoInit["gff"].replace(".gff",".db")+"\n","0","117;116;97",dicoInit["color"])
-
+        dicoInit["gff"] = os.getcwd()+"/db/"+dicoInit["db"]+"_"+dicoInit["ref"]+"_"+urlversion+".gff"
+        dicoInit["gff_db"] = os.getcwd()+"/db/"+dicoInit["db"]+"_"+dicoInit["ref"]+"_"+urlversion+".db"
+        urllib.request.urlretrieve(server+"/"+urlpath,dicoInit['tmp']+"/"+urlpath,reporthook)
+        urllib.request.urlretrieve(server+"/"+urlpath.replace("gff","db"),dicoInit['tmp']+"/"+urlpath.replace("gff","db"),reporthook)        
+        # Extract gzip
+        GZ1 = gzip.open(dicoInit['tmp']+"/"+urlpath, 'rb')
+        GFF = open(dicoInit["gff"], 'wb')
+        GFF.write(GZ1.read())
+        GZ1.close() ; GFF.close()
+        GZ2 = gzip.open(dicoInit['tmp']+"/"+urlpath.replace("gff","db"), 'rb')
+        DB = open(dicoInit["gff_db"], 'wb')
+        DB.write(GZ2.read())
+        GZ2.close() ; DB.close()        
+        sys.stdout.write("\x1b[2K") ; sys.stdout.write("\033[F")
+        printcolor("    • GFF/DB downloaded","0","222;220;184",dicoInit["color"])
+        printcolor(" <> "+dicoInit["gff"].replace(".gff",".(gff/db)")+"\n","0","117;116;97",dicoInit["color"])
+   
 
 #**************************************#
 #       LOAD gffutils Database       #
 #**************************************#
 def load_gff_db(dicoInit):
-    print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
-    dicoInit["spinner"].text = "    • Load GFF DB"
-    dicoInit["spinner"].start()
     dicoInit["db_gff"] = gffutils.FeatureDB(dicoInit["gff"].replace(".gff",".db"), keep_order=True)
-    dicoInit["spinner"].stop()
+    printcolor("    • GFF/DB loaded ","0","222;220;184",dicoInit["color"])
+    printcolor(" <> "+dicoInit["gff_db"]+"\n","0","117;116;97",dicoInit["color"])
+
 
 
 #**************************************#
 #        RETRIEVE genes features       #
 #**************************************#
 def retrieve_transcripts(dicoInit):
-    # print("\x1b[0;38;2;255;187;108m") ; sys.stdout.write("\033[F")
-    # dicoInit["spinner"].text = "    • Create GFF DB"
-    # dicoInit["spinner"].start()
-
-    #***** FInd target overlapping genes *****#
+    #***** Find target overlapping genes *****#
     if dicoInit['inputType']=="l":
+        print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
+        dicoInit["spinner"].text = "  • Extract target genes"
+        dicoInit["spinner"].start()
         # Find intersecation between gff and target bed
         bed = BedTool(dicoInit["bed"])
         gff = BedTool(dicoInit["gff"])
+        set_rna = set()
+        set_gene = set()
         # Search gff exons intresection
         for intersect_elem in gff+bed:
             if intersect_elem.fields[2]=="exon":
                 # retrieve correspunding transcript
                 for rna in dicoInit["db_gff"].parents(dicoInit["db_gff"][intersect_elem.attrs["ID"]], featuretype='mRNA', order_by='start'):
                     gene = list(dicoInit["db_gff"].parents(rna, featuretype='gene', order_by='start'))[0]
-                    print(gene)
+                    set_rna.add(rna)
+                    set_gene.add(gene)
+        dicoInit["spinner"].stop()
+        dicoInit['lst_genes'] = list(set_gene)
+        printcolor("    • Target genes  ","0","222;220;184",dicoInit["color"])
+        printcolor(" <> "+str(len(dicoInit['lst_genes']))+" genes for "+str(len(set_rna))+" transcripts\n","0","117;116;97",dicoInit["color"])
         cleanup(remove_all=True) # delete created temp file
 
 
+#**************************************#
+#   CREATE target genes features BED   #
+#**************************************#
+def create_detailed_bed(dicoInit):
+    printcolor("    • CovPlotter BED\n","0","222;220;184",dicoInit["color"])
+    path_target_genes_bed = dicoInit["tmp"]+"/target_genes.bed"
+    BED = open(path_target_genes_bed,'w')
+    for gene in dicoInit['lst_genes']:
+        gene_name = gene.attributes["Name"][0]
+        for rna in dicoInit["db_gff"].children(gene, featuretype='mRNA', order_by='start'): # .attributes => "ID","Parent","Dbxref","Name","gbkey","gene","product","transcript_id"
+            # Search CDS start and stop
+            cds_start = list(dicoInit["db_gff"].children(rna, featuretype='CDS', order_by='start'))[0].start
+            cds_end = list(dicoInit["db_gff"].children(rna, featuretype='CDS', order_by='start'))[-1].end
+            # Browse exon
+            if rna.strand=="+": exon_cpt = 1
+            else: exon_cpt = len(list(dicoInit["db_gff"].children(rna, featuretype='exon', order_by='start')))
+            for exon in dicoInit["db_gff"].children(rna, featuretype='exon', order_by='start'):
+                # Split exon including CDS
+                if exon.start<cds_start:
+                    if exon.end>cds_start:
+                        if cds_end<exon.end: # case of one exon including all the cds
+                            if exon.strand=="+":
+                                BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(cds_start-1)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR5\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                                BED.write(exon.chrom+"\t"+str(cds_end)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR3\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                            else:
+                                BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(cds_start-1)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR3\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                                BED.write(exon.chrom+"\t"+str(cds_end)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR5\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                            BED.write(exon.chrom+"\t"+str(cds_start-1)+"\t"+str(cds_end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                        else: 
+                            if exon.strand=="+": BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(cds_start-1)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR5\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                            else: BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(cds_start-1)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR3\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                            BED.write(exon.chrom+"\t"+str(cds_start-1)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                    elif exon.strand=="+": BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR5\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                    else: BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR3\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                elif exon.end>cds_end:
+                    if exon.start<cds_end:
+                        if exon.strand=="+": BED.write(exon.chrom+"\t"+str(cds_end)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR3\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                        else: BED.write(exon.chrom+"\t"+str(cds_end)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR5\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                        BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(cds_end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                    elif exon.strand=="+":  BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR3\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                    else: BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"_UTR5\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                else:
+                    BED.write(exon.chrom+"\t"+str(exon.start-1)+"\t"+str(exon.end)+"\t"+gene_name+"#"+rna.attributes["transcript_id"][0]+"#E"+str(exon_cpt).zfill(2)+"\t"+str(exon.score)+"\t"+str(exon.strand)+"\n")
+                if rna.strand=="+": exon_cpt+=1
+                else: exon_cpt-=1
+    BED.close()
 
 
+#**************************************#
+#       LAUNCH bedtools coverage       #
+#**************************************#
+def launch_coverage(dicoInit):
+    printcolor("    • Compute Depth","0","222;220;184",dicoInit["color"])
+    dico_thread = {}
+    for bam_num in dicoInit['dicoBam'].keys():
+        cmd_bedtools = "bedtools coverage -d -a "+dicoInit["tmp"]+"/target_genes.bed  -b "+dicoInit['dicoBam'][bam_num]+" > "+dicoInit["tmp"]+"/"+str(bam_num)+".cov"
+        dico_thread["coverage "+dicoInit['dicoBam'][bam_num]] = {"cmd":cmd_bedtools, "returnstatut":None, "returnlines":[]}
+    launch_threads(dicoInit,dico_thread,"Coverage",None,1)
 
-    # dicoInit["spinner"].stop()
+
+def parse_coverage(dicoInit):
+    print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
+    dicoInit["spinner"].text = "  • CovPlotter Depth"
+    dicoInit["spinner"].start()
+    dicoCov = {}
+    for cov_out in glob.glob(dicoInit["tmp"]+"/*.cov"):
+        sample = dicoInit['dicoBam'][int(os.path.basename(cov_out).replace(".cov",""))]
+        COV = open(cov_out,'r')
+        lst_lines = COV.read().split("\n")
+        COV.close()
+        for line in lst_lines:
+            if line!="":
+                # Read
+                split_line = line.split("\t")
+                split_feature = split_line[3].split("#")
+                gene = split_feature[0]
+                transcript = split_feature[1]
+                exon = split_feature[2]
+                depth = int(split_line[7])
+                # Add to dico_cov
+                if not gene in dicoCov: dicoCov[gene] = {}
+                if not transcript in dicoCov[gene]: dicoCov[gene][transcript] = {}
+                if not exon in dicoCov[gene][transcript]: dicoCov[gene][transcript][exon] = { 'start':int(split_line[1])+1, 'end':int(split_line[2]), 'dico_sample':{} }
+                if not sample in dicoCov[gene][transcript][exon]['dico_sample']: dicoCov[gene][transcript][exon]['dico_sample'][sample] = [depth]
+                dicoCov[gene][transcript][exon]['dico_sample'][sample].append(depth)
+    dicoInit["spinner"].stop()
+    printcolor("    • CovPlotter Depth","0","222;220;184",dicoInit["color"])
