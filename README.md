@@ -12,11 +12,14 @@
 
 ### Requirements
 - python 2.7<br/>
+- [wkhtmltopdf](https://github.com/wkhtmltopdf/wkhtmltopdf)<br/>
+- [PIL](http://pythonware.com/products/pil)<br/>
 - [yaspin](https://github.com/pavdmyt/yaspin)<br/>
 - [gffutils](https://github.com/daler/gffutils)<br/>
 - [pybedtools](https://github.com/daler/pybedtools)<br/>
 - [samtools](https://github.com/samtools/samtools)<br/>
-- tqdm
+- [tqdm](https://github.com/tqdm/tqdm)<br/>
+
 
 ### Running
 ```markdown

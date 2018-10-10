@@ -12,6 +12,11 @@ def printcolor(text,style,fg_rgb,colorBool):
 #***** Print title *****#
 def printtitle(dicoInit):
     printcolor("\n   __      __              \n  /   _   |__)| _ |_|_ _ _ \n  \__(_)\/|   |(_)|_|_(-|  \n  ____________________________________________________________________\n\n","0","255;187;108",dicoInit['color'])
+    printcolor("  Output","0","255;187;108",dicoInit['color'])
+    printcolor(" <> "+dicoInit['out']+"\n","0","222;220;184",dicoInit['color'])
+    printcolor("  Temp","0","255;187;108",dicoInit['color'])
+    printcolor("   <> "+dicoInit['tmp']+"\n","0","222;220;184",dicoInit['color'])
+    printcolor("  ____________________________________________________________________\n\n","0","255;187;108",dicoInit['color'])
 
 #***** Print usage *****#
 def printusage(dicoInit):
@@ -21,6 +26,8 @@ def printusage(dicoInit):
     printcolor("\n\n  [OPTIONS]","0","222;220;184",dicoInit['color'])
     printcolor("\n      -ref       STR      Reference hg19/hg20      (default: hg19)","0","222;220;184",dicoInit['color'])
     printcolor("\n      -db        STR      Database refseq/ensembl  (default: refseq)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -lcov      INT      Low coverage threshold   (default: 50)","0","222;220;184",dicoInit['color'])
+    printcolor("\n      -hcov      INT      High coverage threshold  (default: 100)","0","222;220;184",dicoInit['color'])
     printcolor("\n      -tmp       DIR      Temporary folder         (default: /tmp)","0","222;220;184",dicoInit['color'])
     printcolor("\n      -nt        INT      Threads number           (default: 1)","0","222;220;184",dicoInit['color'])    
     printcolor("\n      -color     BOOL     Terminal color           (true or false)","0","222;220;184",dicoInit['color'])

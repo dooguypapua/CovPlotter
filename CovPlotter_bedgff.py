@@ -5,6 +5,7 @@ import subprocess
 import gffutils
 import urllib.request
 from pybedtools import BedTool,cleanup
+from itertools import groupby
 from CovPlotter_init import *
 from CovPlotter_display import *
 from CovPlotter_process import *
@@ -42,10 +43,10 @@ def check_gff(dicoInit):
         version = os.path.basename(dicoInit["gff"]).split("_")[2].replace(".gff","")
         # Update version is available
         if int(urlversion.replace("v",""))>int(version.replace("v","")):
-            printcolor("    Found "+dicoInit["db"]+" "+dicoInit["ref"]+" "+version+" but "+urlversion+" is available.\n    Do you want to upgrade (y/n)? ","0","222;220;184",dicoInit["color"])
+            printcolor("  Found "+dicoInit["db"]+" "+dicoInit["ref"]+" "+version+" but "+urlversion+" is available.\n  Do you want to upgrade (y/n)? ","0","222;220;184",dicoInit["color"])
             choice = input().lower()
             while choice!="y" and choice!="n":
-                printcolor("    Do you want to upgrade (y/n)? ","0","222;220;184",dicoInit["color"])
+                printcolor("  Do you want to upgrade (y/n)? ","0","222;220;184",dicoInit["color"])
                 choice = input().lower()
             # Delete older version
             if choice=="y":
@@ -55,7 +56,7 @@ def check_gff(dicoInit):
     else: dl = True
     # Download files
     if dl==True:
-        printcolor("    • Download GFF/DB files\n","0","222;220;184",dicoInit["color"])
+        printcolor("  • Download GFF/DB files\n","0","222;220;184",dicoInit["color"])
         print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
         dicoInit["gff"] = os.getcwd()+"/db/"+dicoInit["db"]+"_"+dicoInit["ref"]+"_"+urlversion+".gff"
         dicoInit["gff_db"] = os.getcwd()+"/db/"+dicoInit["db"]+"_"+dicoInit["ref"]+"_"+urlversion+".db"
@@ -71,7 +72,7 @@ def check_gff(dicoInit):
         DB.write(GZ2.read())
         GZ2.close() ; DB.close()        
         sys.stdout.write("\x1b[2K") ; sys.stdout.write("\033[F")
-        printcolor("    • GFF/DB downloaded","0","222;220;184",dicoInit["color"])
+        printcolor("  • GFF/DB downloaded","0","222;220;184",dicoInit["color"])
         printcolor(" <> "+dicoInit["gff"].replace(".gff",".(gff/db)")+"\n","0","117;116;97",dicoInit["color"])
    
 
@@ -80,7 +81,7 @@ def check_gff(dicoInit):
 #**************************************#
 def load_gff_db(dicoInit):
     dicoInit["db_gff"] = gffutils.FeatureDB(dicoInit["gff"].replace(".gff",".db"), keep_order=True)
-    printcolor("    • GFF/DB loaded ","0","222;220;184",dicoInit["color"])
+    printcolor("  • GFF/DB loaded ","0","222;220;184",dicoInit["color"])
     printcolor(" <> "+dicoInit["gff_db"]+"\n","0","117;116;97",dicoInit["color"])
 
 
@@ -92,7 +93,7 @@ def retrieve_transcripts(dicoInit):
     #***** Find target overlapping genes *****#
     if dicoInit['inputType']=="l":
         print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
-        dicoInit["spinner"].text = "  • Extract target genes"
+        dicoInit["spinner"].text = "• Extract target genes"
         dicoInit["spinner"].start()
         # Find intersecation between gff and target bed
         bed = BedTool(dicoInit["bed"])
@@ -109,7 +110,7 @@ def retrieve_transcripts(dicoInit):
                     set_gene.add(gene)
         dicoInit["spinner"].stop()
         dicoInit['lst_genes'] = list(set_gene)
-        printcolor("    • Target genes  ","0","222;220;184",dicoInit["color"])
+        printcolor("  • Target genes  ","0","222;220;184",dicoInit["color"])
         printcolor(" <> "+str(len(dicoInit['lst_genes']))+" genes for "+str(len(set_rna))+" transcripts\n","0","117;116;97",dicoInit["color"])
         cleanup(remove_all=True) # delete created temp file
 
@@ -118,7 +119,7 @@ def retrieve_transcripts(dicoInit):
 #   CREATE target genes features BED   #
 #**************************************#
 def create_detailed_bed(dicoInit):
-    printcolor("    • CovPlotter BED\n","0","222;220;184",dicoInit["color"])
+    printcolor("  • CovPlotter BED\n","0","222;220;184",dicoInit["color"])
     path_target_genes_bed = dicoInit["tmp"]+"/target_genes.bed"
     BED = open(path_target_genes_bed,'w')
     for gene in dicoInit['lst_genes']:
@@ -163,10 +164,52 @@ def create_detailed_bed(dicoInit):
 
 
 #**************************************#
+#     GENE REGION WITHOUT ANY EXON     #
+#**************************************#
+def gene_exonic_regions(dicoInit,dicoCov,gene,gene_name):
+    dico_pos_grp_type = {}
+    dico_exon_pos = {}
+    exonic_size = 0
+    max_exonic_size = 0
+    # Initialize dico with empty group type for all positions
+    for pos in range(0,gene.end-gene.start+1,1):
+        dico_pos_grp_type[pos] = "0"
+        dico_exon_pos[pos] = {}
+    # Browse transcripts to find position with at least one exon
+    for transcript_id in dicoCov[gene_name]:
+        for exon in dicoCov[gene_name][transcript_id]:
+            relative_exon_start = dicoCov[gene_name][transcript_id][exon]["start"]-gene.start
+            relative_exon_end = dicoCov[gene_name][transcript_id][exon]["end"]-gene.start
+            exonic_size+=(relative_exon_end-relative_exon_start)
+            if exon.__contains__("UTR"): grp_type = "2"
+            else: grp_type = "1"
+            for pos in range(relative_exon_start,relative_exon_end+1,1):
+                dico_pos_grp_type[pos] = grp_type
+                try: dico_exon_pos[pos][transcript_id].append(exon)
+                except: dico_exon_pos[pos][transcript_id] = [exon]
+        if exonic_size>max_exonic_size: max_exonic_size = exonic_size
+    # Convert to String and group per type
+    str_cover = "".join(list(dico_pos_grp_type.values()))
+    groups = groupby(str_cover)
+    lst_grp = [(label, sum(1 for _ in group)) for label, group in groups]
+    # Define not empty interval
+    dico_nonEmpty_interval = {}
+    max_interval_length = 0
+    current_pos = 0
+    for grp in lst_grp: # grp = [grp_type,grp_length]
+        if grp[0]!="0":
+            dico_nonEmpty_interval[str(current_pos)+"#"+str(current_pos+grp[1])] = dico_exon_pos[current_pos]
+            if grp[1]>max_interval_length: max_interval_length = grp[1]
+        current_pos+=grp[1]
+    return dico_nonEmpty_interval,max_interval_length,max_exonic_size
+
+
+
+#**************************************#
 #       LAUNCH bedtools coverage       #
 #**************************************#
 def launch_coverage(dicoInit):
-    printcolor("    • Compute Depth","0","222;220;184",dicoInit["color"])
+    printcolor("  • Compute Depth","0","222;220;184",dicoInit["color"])
     dico_thread = {}
     for bam_num in dicoInit['dicoBam'].keys():
         cmd_bedtools = "bedtools coverage -d -a "+dicoInit["tmp"]+"/target_genes.bed  -b "+dicoInit['dicoBam'][bam_num]+" > "+dicoInit["tmp"]+"/"+str(bam_num)+".cov"
@@ -176,11 +219,11 @@ def launch_coverage(dicoInit):
 
 def parse_coverage(dicoInit):
     print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
-    dicoInit["spinner"].text = "  • CovPlotter Depth"
+    dicoInit["spinner"].text = "• CovPlotter Depth"
     dicoInit["spinner"].start()
     dicoCov = {}
     for cov_out in glob.glob(dicoInit["tmp"]+"/*.cov"):
-        sample = dicoInit['dicoBam'][int(os.path.basename(cov_out).replace(".cov",""))]
+        sample = int(os.path.basename(cov_out).replace(".cov",""))
         COV = open(cov_out,'r')
         lst_lines = COV.read().split("\n")
         COV.close()
@@ -199,5 +242,12 @@ def parse_coverage(dicoInit):
                 if not exon in dicoCov[gene][transcript]: dicoCov[gene][transcript][exon] = { 'start':int(split_line[1])+1, 'end':int(split_line[2]), 'dico_sample':{} }
                 if not sample in dicoCov[gene][transcript][exon]['dico_sample']: dicoCov[gene][transcript][exon]['dico_sample'][sample] = [depth]
                 dicoCov[gene][transcript][exon]['dico_sample'][sample].append(depth)
+    # Compute min depth per region
+    for gene in dicoCov:
+        for transcript in dicoCov[gene]:
+            for exon in dicoCov[gene][transcript]:
+                for sample in dicoCov[gene][transcript][exon]['dico_sample']: dicoCov[gene][transcript][exon]['dico_sample'][sample] = min(dicoCov[gene][transcript][exon]['dico_sample'][sample])
+    # Return dicoCov
     dicoInit["spinner"].stop()
-    printcolor("    • CovPlotter Depth","0","222;220;184",dicoInit["color"])
+    return dicoCov
+    printcolor("  • CovPlotter Depth\n","0","222;220;184",dicoInit["color"])

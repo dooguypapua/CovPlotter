@@ -6,6 +6,7 @@ import subprocess
 import sys
 import threading
 import time
+import shutil
 from CovPlotter_display import *
 
 
@@ -65,3 +66,13 @@ def launch_threads(dicoInit,dicoThread,job_prefix,target_fct,thread_ratio):
         printcolor("\n  ERROR:","0","212;0;0",dicoInit['color'])
         printcolor(" "+lst_error[0]+"\n","0","212;0;0",dicoInit['color'])
         for error in lst_error[1:]: printcolor("         "+error+"\n","0","212;0;0",dicoInit['color'])
+
+
+
+
+#**************************************#
+#               CLEANING               #
+#**************************************#
+def cleaning(dicoInit):
+    printcolor("  ____________________________________________________________________\n\n","0","255;187;108",dicoInit['color'])
+    shutil.rmtree(dicoInit['tmp'])

@@ -13,7 +13,7 @@ from CovPlotter_display import *
 
 #***** Arg manager *****#
 def arg_manager(lst_arg):
-    dicoInit = { 'inputType':"", 'dicoBam':{}, 'genes':"", 'lst_genes':[], 'bed':"", 'gff':"", 'gff_db':"", "db":"refseq", 'out':"", 'ref':"", 'spinner':yaspin(), 'tmp':"/tmp/coverplot_"+str(uuid.uuid4())[:8], 'nt':1, 'color':True }
+    dicoInit = { 'inputType':"", 'dicoBam':{}, 'genes':"", 'lst_genes':[], 'lcov':50, 'hcov':100, 'bed':"", 'gff':"", 'gff_db':"", "db":"refseq", 'out':"", 'ref':"", 'spinner':yaspin(), 'tmp':"/tmp/coverplot_"+str(uuid.uuid4())[:8], 'nt':1, 'color':True }
     lstError = []
     bool_i = False ; bool_o = False ; bool_g = False ; bool_n = False ; bool_l = False ; bool_r = False
     if len(lst_arg)==1 or lst_arg[1] in ["-h","--help"]: printtitle(dicoInit) ; printusage(dicoInit)
@@ -97,6 +97,18 @@ def arg_manager(lst_arg):
                 try: dicoInit['nt'] = int(lst_arg[i+1])
                 except: lstError.append("(-nt) Invalid value \""+lst_arg[i+1]+"\"")
             next(iterarg)
+        elif lst_arg[i]=="-lcov":
+            if len(lst_arg)<=i+1: lstError.append("(-lcov) Any value specified")
+            else:
+                try: dicoInit['lcov'] = int(lst_arg[i+1])
+                except: lstError.append("(-lcov) Invalid value \""+lst_arg[i+1]+"\"")
+            next(iterarg)
+        elif lst_arg[i]=="-hcov":
+            if len(lst_arg)<=i+1: lstError.append("(-hcov) Any value specified")
+            else:
+                try: dicoInit['hcov'] = int(lst_arg[i+1])
+                except: lstError.append("(-hcov) Invalid value \""+lst_arg[i+1]+"\"")
+            next(iterarg)  
         elif lst_arg[i]=="-color":
             if len(lst_arg)<=i+1: lstError.append("(-color) Any value specified")
             elif not lst_arg[i+1].lower() in ["true","false"]: lstError.append("(-color) Invalid value \""+lst_arg[i+1]+"\"")
@@ -117,7 +129,7 @@ def arg_manager(lst_arg):
         sys.stdout.write('\x1b[1K')
         printcolor("\n  ERROR:","0","212;0;0",dicoInit['color'])
         printcolor(" "+lstError[0]+"\n","0","212;0;0",dicoInit['color'])
-        for error in lstError[1:]: printcolor("         "+error+"\n","0","212;0;0",dicoInit['color'])
+        for error in lstError[1:]: printcolor("       "+error+"\n","0","212;0;0",dicoInit['color'])
         printusage(dicoInit)
     # Create tmp folder
     os.makedirs(dicoInit['tmp'], exist_ok=True)
