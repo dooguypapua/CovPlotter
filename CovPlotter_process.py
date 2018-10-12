@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import shutil
+from pybedtools import cleanup
 from CovPlotter_display import *
 
 
@@ -53,14 +54,14 @@ def launch_threads(dicoInit,dicoThread,job_prefix,target_fct,thread_ratio):
                     PrevNbFinishThread = NbFinishThread
                 # check error
                 for thread_name in dicoThread.keys():
-                    if dicoThread[thread_name]["returnstatut"]!=0: break
+                    if dicoThread[thread_name]["returnstatut"]!=0 and dicoThread[thread_name]["returnstatut"]!=None: break
                 time.sleep(1)
             pbar.close()
         sys.stdout.write("\033[F")
     # Check dicoThread
     lst_error = []
     for name in dicoThread.keys():
-        if dicoThread[name]["returnstatut"]!=0: lst_error.append(name)
+        if dicoThread[name]["returnstatut"]!=0 and dicoThread[thread_name]["returnstatut"]!=None: lst_error.append(name)
     if len(lst_error)>0:
         sys.stdout.write('\x1b[1K')
         printcolor("\n  ERROR:","0","212;0;0",dicoInit['color'])
@@ -76,3 +77,4 @@ def launch_threads(dicoInit,dicoThread,job_prefix,target_fct,thread_ratio):
 def cleaning(dicoInit):
     printcolor("  ____________________________________________________________________\n\n","0","255;187;108",dicoInit['color'])
     shutil.rmtree(dicoInit['tmp'])
+    cleanup(remove_all=True) # delete created temp file

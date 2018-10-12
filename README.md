@@ -10,18 +10,25 @@
 
 ##
 
+
 ### Requirements
-- python 2.7<br/>
+- python3<br/>
 - [wkhtmltopdf](https://github.com/wkhtmltopdf/wkhtmltopdf)<br/>
-- [PIL](http://pythonware.com/products/pil)<br/>
-- [yaspin](https://github.com/pavdmyt/yaspin)<br/>
-- [gffutils](https://github.com/daler/gffutils)<br/>
-- [pybedtools](https://github.com/daler/pybedtools)<br/>
-- [samtools](https://github.com/samtools/samtools)<br/>
-- [tqdm](https://github.com/tqdm/tqdm)<br/>
+- python package: [Pillow](https://github.com/python-pillow/Pillow), [gffutils](https://github.com/daler/gffutils), [pybedtools](https://github.com/daler/pybedtools), [binaryornot](https://github.com/audreyr/binaryornot), [yaspin (0.12.0)](https://github.com/pavdmyt/yaspin), [tqdm](https://github.com/tqdm/tqdm)
 
 
-### Running
+### Installation
+```markdown
+wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.4/wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
+tar -xvf wkhtmltox-0.12.4_linux-generic-amd64.tar.xz
+cd wkhtmltox
+sudo cp -R ./* /usr/
+git clone https://github.com/dooguypapua/CovPlotter.git
+cd CovPlotter
+pip3 install -r requirements.txt
+```
+
+### Usage
 ```markdown
    __      __              
   /   _   |__)| _ |_|_ _ _ 

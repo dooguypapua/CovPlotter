@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # dooguypapua
 import sys,os
+# Force python3
+if sys.version_info<(3,6,0): exit("\nYou need python 3.6 or later to run CovPlotter\n\n")
 import subprocess
 from CovPlotter_init import *
 from CovPlotter_display import *
@@ -30,4 +32,4 @@ dicoCov = parse_coverage(dicoInit)
 coverview_plot(dicoInit,dicoCov)
 
 #***** END *****#
-cleaning(dicoInit)
+# cleaning(dicoInit)

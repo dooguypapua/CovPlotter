@@ -1,0 +1,6 @@
+Pillow
+gffutils
+pybedtools
+binaryornot
+yaspin == 0.12.0
+tqdm

@@ -2,12 +2,15 @@
 # dooguypapua
 import sys,os
 import subprocess
-from binaryornot.check import is_binary
-from yaspin import yaspin
-from yaspin.spinners import Spinners
+import pip
 import urllib.request
 import gzip
 import uuid
+import time
+from binaryornot.check import is_binary
+from yaspin import yaspin
+from yaspin.spinners import Spinners
+import pysam
 from CovPlotter_display import *
 
 
@@ -33,9 +36,8 @@ def arg_manager(lst_arg):
                     except: lstError.append("(-i) Unable to read file \""+lst_arg[i+1]+"\"")
                     for bam in lst_bam:
                         if os.path.isfile(bam):
-                            pipe = subprocess.Popen("samtools quickcheck "+bam, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) ; pipe.communicate()
-                            if pipe.returncode!=0: lstError.append("(-i) Invalid file format \""+bam+"\"")
-                            else: dicoInit['dicoBam'][len(dicoInit['dicoBam'])] = bam
+                            try: pysam.quickcheck(bam) ; dicoInit['dicoBam'][len(dicoInit['dicoBam'])] = bam
+                            except: lstError.append("(-i) Invalid file format \""+bam+"\"")
                         elif bam!="": lstError.append("(-i) File \""+bam+"\" was not found")
             next(iterarg)
         elif lst_arg[i]=="-o":

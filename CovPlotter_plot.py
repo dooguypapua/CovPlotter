@@ -31,7 +31,7 @@ def coverview_plot(dicoInit,dicoCov):
         for bam_num in dicoInit['dicoBam']: dico_plt[bam_num] = plt.figure(gene_name+"_"+str(bam_num),figsize=(fig_width,10))
         # dicoThread
         dicoThread[gene_name] = { "dico_plt":dico_plt, "dicoCov":dicoCov[gene_name], "dico_nonEmpty_interval":dico_nonEmpty_interval, "max_interval_length":max_interval_length, "gene_start":dicoInit["db_gff"][gene_id].start, "max_exonic_size":max_exonic_size, "returnstatut":-1}
-        if len(dicoThread)>10: break
+        if len(dicoThread)==10: break
     dicoInit["spinner"].stop()
     printcolor("  • CovPlotter Threads\n","0","222;220;184",dicoInit["color"])
     printcolor("  • CovPlotter Plots","0","222;220;184",dicoInit["color"])

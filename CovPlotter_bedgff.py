@@ -4,7 +4,7 @@ import sys,os,shutil,re,glob
 import subprocess
 import gffutils
 import urllib.request
-from pybedtools import BedTool,cleanup
+from pybedtools import BedTool,set_tempdir
 from itertools import groupby
 from CovPlotter_init import *
 from CovPlotter_display import *
@@ -112,7 +112,6 @@ def retrieve_transcripts(dicoInit):
         dicoInit['lst_genes'] = list(set_gene)
         printcolor("  • Target genes  ","0","222;220;184",dicoInit["color"])
         printcolor(" <> "+str(len(dicoInit['lst_genes']))+" genes for "+str(len(set_rna))+" transcripts\n","0","117;116;97",dicoInit["color"])
-        cleanup(remove_all=True) # delete created temp file
 
 
 #**************************************#
@@ -208,14 +207,19 @@ def gene_exonic_regions(dicoInit,dicoCov,gene,gene_name):
 #**************************************#
 #       LAUNCH bedtools coverage       #
 #**************************************#
+def pybedtoolcoverage(dicoInit,dicoThread,thread_name):
+    bed = BedTool(dicoThread[thread_name]['bed'])
+    bam = BedTool(dicoThread[thread_name]['bam'])
+    cov = bed.coverage(bam,d=True)
+    shutil.move(cov.fn,dicoInit['tmp']+"/"+str(dicoThread[thread_name]['bam_num'])+".cov")
+
 def launch_coverage(dicoInit):
     printcolor("  • Compute Depth","0","222;220;184",dicoInit["color"])
-    dico_thread = {}
+    dicoThread = {}
+    set_tempdir(dicoInit['tmp'])
     for bam_num in dicoInit['dicoBam'].keys():
-        cmd_bedtools = "bedtools coverage -d -a "+dicoInit["tmp"]+"/target_genes.bed  -b "+dicoInit['dicoBam'][bam_num]+" > "+dicoInit["tmp"]+"/"+str(bam_num)+".cov"
-        dico_thread["coverage "+dicoInit['dicoBam'][bam_num]] = {"cmd":cmd_bedtools, "returnstatut":None, "returnlines":[]}
-    launch_threads(dicoInit,dico_thread,"Coverage",None,1)
-
+        dicoThread["coverage "+dicoInit['dicoBam'][bam_num]] = {"bed":dicoInit["tmp"]+"/target_genes.bed", "bam":dicoInit['dicoBam'][bam_num], "bam_num":bam_num, "returnstatut":None, "returnlines":[]}
+    launch_threads(dicoInit,dicoThread,"pybedtoolcoverage",pybedtoolcoverage,1)
 
 def parse_coverage(dicoInit):
     print("\x1b[0;38;2;222;220;184m") ; sys.stdout.write("\033[F")
