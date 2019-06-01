@@ -136,3 +136,4 @@ def arg_manager(lst_arg):
     # Create tmp folder
     os.makedirs(dicoInit['tmp'], exist_ok=True)
     return dicoInit
+

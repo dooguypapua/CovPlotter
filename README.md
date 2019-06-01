@@ -1,4 +1,4 @@
-![CovPlotter](http://163.172.45.124/uploads/logo.png?)
+![CovPlotter](https://163.172.45.124/owncloud/index.php/s/XlfZiq6NCpkY97T/download)
 
 
 ### &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Plot read depth per transcript
@@ -6,7 +6,7 @@
 
 ##
 
-![CovPlotter example](http://163.172.45.124/uploads/CovPlotter_example.png)
+![CovPlotter example](https://163.172.45.124/owncloud/index.php/s/T7tNR6GvqCL1fsH/download)
 
 ##
 
